@@ -53,7 +53,7 @@ def save_message(chat_id: int,
 
 def get_history(
     chat_id,
-    limit: int = 8,
+    limit: int = 12,
     max_message_chars: int = MAX_MESSAGE_CHARS,
     max_history_chars: int = MAX_HISTORY_CHARS,
 ) -> list[dict]:

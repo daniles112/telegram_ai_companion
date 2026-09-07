@@ -18,6 +18,7 @@ class BotStatus(Enum):
 class BotRunner:
     def __init__(self):
         self._bot_session: TelegramBot | None = None
+        self.error = None
         self._thread: Thread | None = None
         self._status = BotStatus.STOPPED
         self._lock = Lock()
@@ -37,6 +38,7 @@ class BotRunner:
     
 
     def start(self, model_info: ModelConfig, settings: SettingsManager) -> None:
+        self.error = None
 
         if self._status != BotStatus.STOPPED:
             raise RuntimeError("Бот уже запущен")
@@ -73,6 +75,7 @@ class BotRunner:
                                         on_ready=self._on_bot_ready)
 
         except Exception as error:
+            self.error = error
             print(f"Ошибка работы бота: {error!r}")
 
         finally:

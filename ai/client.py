@@ -24,17 +24,17 @@ def register(name):
 
 class OpenAIProvider(ABC):
     def __init__(self,
-                api_key,
+                settings,
                 name, 
-                base_url,
                 model, 
                 timeout=20.0,
                 max_retries=3,
                 max_tokens=1500):
         
-        self.api_key = api_key
         self.name = name
-        self.base_url = base_url
+        self.settings = settings
+        self.api_key = settings.get(f"ai.providers.{self.name}.api_key")
+        self.base_url = settings.get(f"ai.providers.{self.name}.base_url")
         self.model = model
         self.timeout = timeout
         self.max_retries = max_retries
@@ -87,30 +87,33 @@ class OpenAIProvider(ABC):
                 max_tokens=1
             )
     
-            return True
+            return {
+                "result": True,
+                "errors": None
+            }
     
         except Exception as e:
             print(repr(e))
-            return False
+            return {
+                    "result": False,
+                    "errors": e
+                }
 
 
     
 
 
 
-    
 
 @register("groq")
 class GroqProvider(OpenAIProvider):
 
     def __init__(self,
+                settings,
                 model,
-                name,
-                api_key=getenv("GROQ_API_KEY"),
-                base_url="https://api.groq.com/openai/v1"):
+                name):
         
-        super().__init__(api_key=api_key, 
-                         base_url=base_url, 
+        super().__init__(settings=settings,
                          model=model,
                          name=name)
 
@@ -145,13 +148,11 @@ class GroqProvider(OpenAIProvider):
 class OpenAIProvider(OpenAIProvider):
 
     def __init__(self,
+                settings,
                 model,
-                name,
-                api_key=getenv("OPENAI_API_KEY"),
-                base_url=None):
+                name):
         
-        super().__init__(api_key=api_key, 
-                         base_url=base_url, 
+        super().__init__(settings=settings,
                          model=model,
                          name=name)
 
@@ -168,11 +169,17 @@ class OpenAIProvider(OpenAIProvider):
                 ]
             )
     
-            return True
-
+            return {
+                    "result": True,
+                    "errors": None
+                }
+        
         except Exception as e:
             print(repr(e))
-            return False
+            return {
+                    "result": False,
+                    "errors": e
+                }
 
 
         
@@ -181,13 +188,11 @@ class OpenAIProvider(OpenAIProvider):
 class OpenRouterProvider(OpenAIProvider):
 
     def __init__(self,
+                settings,
                 model,
-                name,
-                api_key=getenv("OPEN_ROUTER_API_KEY"),
-                base_url="https://openrouter.ai/api/v1"):
+                name):
         
-        super().__init__(api_key=api_key, 
-                         base_url=base_url, 
+        super().__init__(settings=settings,
                          model=model,
                          name=name)
         

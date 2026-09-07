@@ -11,6 +11,7 @@ class TelegramCheckWorker(QObject):
         super().__init__()
         self.token = token
 
+
     @Slot()
     def run(self):
         try:
@@ -22,6 +23,7 @@ class TelegramCheckWorker(QObject):
 
         except Exception as error:
             self.error.emit(str(error))
+
 
     async def check(self):
         bot = Bot(self.token)

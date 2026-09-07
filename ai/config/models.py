@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-
+from PySide6.QtCore import QObject, Signal
 
 
 
@@ -13,8 +13,11 @@ class ModelConfig:
 
 
 
-class ModelRegistry:
+class ModelRegistry(QObject):
+    models_changed = Signal()
+
     def __init__(self, settings):
+        super().__init__()
         self.models: list[ModelConfig] = []
         self.settings = settings
 
@@ -34,8 +37,8 @@ class ModelRegistry:
 
     def _register_builtin_models(self):
         self.register_model(
-            name="openai_gpt5.4_mini",
-            model_id="gpt-5.4-mini",
+            name="openai_gpt5.6_luna",
+            model_id="gpt-5.6-luna",
             provider="openai"
         )
 
@@ -151,6 +154,8 @@ class ModelRegistry:
             custom_models
         )
 
+        self.models_changed.emit()
+
 
     def remove_custom_model(
         self,
@@ -187,6 +192,8 @@ class ModelRegistry:
             "ai.custom_models",
             custom_models
         )
+
+        self.models_changed.emit()
 
     
 

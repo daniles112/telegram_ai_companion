@@ -30,7 +30,7 @@ class TelegramBot:
         self.dp = aiogram.Dispatcher()
         self.router = aiogram.Router()
         self.dp.include_router(self.router)
-        self.provider_manager = ProviderManager()
+        self.provider_manager = ProviderManager(self.settings)
         self.image_generator = CivitaiClient()
         self._loop = None
 
@@ -49,7 +49,7 @@ class TelegramBot:
         
             if text:
                 if len(text) > 2000:
-                    await message.reply("FROM SYSTEM: длина sys_prompt не может быть больше 2000 символов.", parse_mode="Markdown")
+                    await message.reply("FROM SYSTEM: длина sys_prompt не может быть больше 2000 символов.")
 
                     return
         
@@ -136,9 +136,11 @@ class TelegramBot:
         self.provider_manager.select(model_info)
 
         print("Прогрев модели...")
+
+        ping_answer = await self.provider_manager.ping()
         
-        if not await self.provider_manager.ping():
-            raise Exception("Модель недоступна.")
+        if not ping_answer["result"]:
+            raise Exception(ping_answer["errors"])
         
         print("Модель готова.")
 
