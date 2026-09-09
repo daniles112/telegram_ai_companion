@@ -7,6 +7,7 @@ from telegram_bot.bot_runner import BotRunner, BotStatus
 
 from GUI_panel.gui_hepler.GUI_styles_helper import *
 from GUI_panel.settings_dialog import SettingsDialog
+from GUI_panel.chats_dialog import ChatsDialog
 
 
 class MainWindow(QWidget):
@@ -14,6 +15,7 @@ class MainWindow(QWidget):
         super().__init__()
         self.resize(420, 260)
         self.bot_runner = bot_runner
+        self.chat_dialog = ChatsDialog(self.bot_runner, self)
         self.settings = settings
         self.model_registry = model_registry
         self.model_registry.models_changed.connect(self.update_model_list)
@@ -31,6 +33,7 @@ class MainWindow(QWidget):
         self.start_button = create_button("Запустить бота")
         self.stop_button = create_button("Остановить бота", style="danger")
         self.settings_button = create_button("Настройки", style="secondary")
+        self.chats_button = create_button("Чаты", style="secondary")
         self.button_layout.addWidget(self.start_button)
         self.button_layout.addWidget(self.stop_button)
         self.stop_button.setEnabled(False)
@@ -46,10 +49,12 @@ class MainWindow(QWidget):
         layout.addStretch()
         layout.addLayout(self.button_layout)
         layout.addWidget(self.settings_button)
+        layout.addWidget(self.chats_button)
         self.setLayout(layout)
         self.start_button.clicked.connect(self.start_bot)
         self.stop_button.clicked.connect(self.stop_bot)
         self.settings_button.clicked.connect(self.open_settings)
+        self.chats_button.clicked.connect(self.open_chats)
 
 
     def update_model_list(self) -> None:
@@ -171,3 +176,7 @@ class MainWindow(QWidget):
                 self.set_status("starting")
                 QTimer.singleShot(200, self.check_bot_started)
                 self.bot_runner.restart(model_info, self.settings)
+
+
+    def open_chats(self) -> None:
+        self.chat_dialog.show()

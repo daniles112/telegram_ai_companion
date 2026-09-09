@@ -3,6 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 import asyncio
 from ai.ai_agent import take_message
+from ai.memory import clear_history
 from ai.config.settings_manager import SettingsManager
 from ai.config.models import ModelConfig
 from ai.provider_manager import ProviderManager
@@ -35,10 +36,23 @@ class TelegramBot:
         self._loop = None
 
         self._register_handlers()
-        
+
+
+    @property
+    def loop(self):
+        return self._loop
+
 
 
     def _register_handlers(self) -> None:
+
+        @self.router.message(Command("reset"))
+        async def reset_handler(message: Message):
+
+            deleted_count = clear_history(message.chat.id)
+            await message.reply(
+                f"FROM SYSTEM: история этого чата очищена. Удалено сообщений: {deleted_count}."
+            )
 
         @self.router.message(Command("prompt"))
         async def prompt_handler(message: Message):
@@ -155,6 +169,14 @@ class TelegramBot:
 
         await self.dp.stop_polling()
         await self.image_generator.close()
+        await self.provider_manager.close()
 
         print("Бот остановлен.")
+
+
+    async def send_message(self, chat_id: int, message: str):
+        await self.bot.send_message(
+            chat_id=chat_id,
+            text=message,
+        )
 

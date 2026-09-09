@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -6,6 +7,32 @@ from typing import Any
 
 
 BASE_DIR = Path(__file__).parent
+
+DEFAULT_SETTINGS = {
+    "telegram": {
+        "token": "",
+        "bot_trigger_name": "",
+        "default_prompt": "",
+    },
+    "ai": {
+        "custom_models": [],
+        "providers": {
+            "openai": {
+                "api_key": "",
+                "base_url": "https://api.openai.com/v1",
+            },
+            "groq": {
+                "api_key": "",
+                "base_url": "https://api.groq.com/openai/v1",
+            },
+            "openrouter": {
+                "api_key": "",
+                "base_url": "https://openrouter.ai/api/v1",
+            },
+        },
+    },
+}
+
 
 class SettingsManager:
 
@@ -17,7 +44,8 @@ class SettingsManager:
 
     def load(self) -> None:
         if not self.path.exists():
-            self._settings = {}
+            self._settings = deepcopy(DEFAULT_SETTINGS)
+            self.save()
             return
 
         with self.path.open("r", encoding="utf-8") as file:

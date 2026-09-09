@@ -8,6 +8,7 @@ from GUI_panel.ai_settings_page import AISettingsPage
 from GUI_panel.gui_hepler.GUI_styles_helper import *
 from GUI_panel.telegram_settings_page import TelegramSettingsPage
 from GUI_panel.providers_page import AIProvidersPage
+from GUI_panel.system_prompt_page import SystemPromptPage
 
 
 class SettingsDialog(QDialog):
@@ -24,7 +25,7 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Настройки")
         self.resize(700, 450)
         self.settings_menu = create_listwidget()
-        self.settings_menu.addItems(["Telegram", "ИИ-Модели", "Провайдеры (API)"])
+        self.settings_menu.addItems(["Telegram", "LLM-Модели", "Провайдеры (API)", "Системный промпт"])
         self.settings_menu.setSpacing(3)
         self.settings_menu.setFixedWidth(200)
         self.settings_menu.setFixedHeight(400)
@@ -32,11 +33,11 @@ class SettingsDialog(QDialog):
         self.telegram_page = TelegramSettingsPage(self.settings, self.bot_runner)
         self.ai_page = AISettingsPage(self.model_registry)
         self.providers_page = AIProvidersPage(self.settings)
+        self.system_prompt_page = SystemPromptPage(self.settings)
         self.settings_pages.addWidget(self.telegram_page)
         self.settings_pages.addWidget(self.ai_page)
         self.settings_pages.addWidget(self.providers_page)
-        self.settings_pages.addWidget(create_subtitle("Настройки изображений"))
-        self.settings_pages.addWidget(create_subtitle("Настройки интерфейса"))
+        self.settings_pages.addWidget(self.system_prompt_page)
         self.settings_menu.currentRowChanged.connect(self.settings_pages.setCurrentIndex)
         self.settings_menu.setCurrentRow(0)
         self.save_button = create_button("Сохранить", style="secondary")
@@ -85,6 +86,11 @@ class SettingsDialog(QDialog):
                 f"ai.providers.{provider}.base_url",
                 config.get("base_url", "")
             )
+
+        self.settings.set(
+            "telegram.default_prompt",
+            self.system_prompt_page.get_settings()
+        )
 
         self.accept()
 

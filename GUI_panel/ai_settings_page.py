@@ -9,9 +9,9 @@ class AISettingsPage(QWidget):
     def __init__(self, model_registry: ModelRegistry, parent=None) -> None:
         super().__init__(parent)
         self.model_registry = model_registry
-        title = create_title("Модели AI")
+        title = create_title("LLM Модели")
         description = create_subtitle(
-            "Выберите модель для ответов бота и просмотра её параметров"
+            "Настройка LLM моделей для ответов бота"
         )
 
         model_label = create_subtitle("Модель")

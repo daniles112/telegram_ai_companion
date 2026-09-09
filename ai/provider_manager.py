@@ -27,3 +27,7 @@ class ProviderManager:
 
     def ping(self):
         return self._provider.ping()
+
+
+    def close(self):
+        self._provider.close_connection()

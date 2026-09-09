@@ -6,8 +6,10 @@ GUI Styles Helper - Функции для быстрого применения 
 
 from PySide6.QtWidgets import (
     QLabel, QLineEdit, QPushButton, 
-    QComboBox, QListWidget, QDialog
+    QComboBox, QListWidget, QDialog, QTextEdit
 )
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPainter
 from typing import Dict
 
 # ============================================================================
@@ -91,6 +93,28 @@ class Styles:
             border: 2px solid {Colors.PRIMARY};
         }}
         QLineEdit:disabled {{
+            background-color: {Colors.BG_LIGHT};
+            color: {Colors.TEXT_HINT};
+        }}
+    """
+
+    TEXTEDIT = f"""
+        QTextEdit {{
+            background-color: {Colors.BG_WHITE};
+            border: 2px solid {Colors.BORDER};
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: {Colors.TEXT_DARK};
+            selection-background-color: {Colors.PRIMARY};
+        }}
+        QTextEdit:focus {{
+            border: 2px solid {Colors.PRIMARY};
+        }}
+        QTextEdit:hover {{
+            border: 2px solid {Colors.PRIMARY};
+        }}
+        QTextEdit:disabled {{
             background-color: {Colors.BG_LIGHT};
             color: {Colors.TEXT_HINT};
         }}
@@ -438,6 +462,33 @@ def create_input(placeholder: str = "", parent=None) -> QLineEdit:
     input_field = QLineEdit(parent)
     input_field.setPlaceholderText(placeholder)
     input_field.setStyleSheet(Styles.LINEEDIT)
+    return input_field
+
+
+class WrappedPlaceholderTextEdit(QTextEdit):
+    def __init__(self, placeholder: str = "", parent=None):
+        super().__init__(parent)
+        self._wrapped_placeholder = placeholder
+        self.setPlaceholderText("")
+        self.setLineWrapMode(QTextEdit.WidgetWidth)
+        self.textChanged.connect(self.viewport().update)
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+
+        if self.toPlainText() or not self._wrapped_placeholder:
+            return
+
+        painter = QPainter(self.viewport())
+        painter.setPen(self.palette().placeholderText().color())
+        placeholder_rect = self.viewport().rect().adjusted(12, 8, -12, -8)
+        painter.drawText(placeholder_rect, Qt.TextWordWrap, self._wrapped_placeholder)
+
+
+def create_text_input(placeholder: str = "", parent=None) -> QTextEdit:
+    """Создать красивое поле ввода"""
+    input_field = WrappedPlaceholderTextEdit(placeholder, parent)
+    input_field.setStyleSheet(Styles.TEXTEDIT)
     return input_field
 
 

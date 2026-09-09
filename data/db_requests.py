@@ -26,6 +26,23 @@ def add_chat(chat_id: int, chat_title: str):
     conn.commit()
 
 
+def get_chats():
+
+    with get_connection() as conn:
+    
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+                SELECT chat_id, chat_title 
+                FROM chats
+            """
+        )
+
+        rows = cur.fetchall()
+
+    return rows
+        
 
 
 def save_generation(

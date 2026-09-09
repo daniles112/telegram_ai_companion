@@ -13,7 +13,6 @@ class TelegramSettingsPage(QWidget):
         self.settings = settings
         self.bot_runner = bot_runner
         title = create_title("Telegram")
-        title.setStyleSheet("font-size: 20px; font-weight: bold;")
         description = create_subtitle("Настройка подключения Telegram-бота")
         name_label = create_subtitle("Имя-триггер Telegram-бота")
         self.name_input = create_input()

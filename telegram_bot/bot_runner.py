@@ -111,7 +111,7 @@ class BotRunner:
 
         self.status = BotStatus.STOPPING
 
-        loop = getattr(bot, "_loop", None)
+        loop = bot.loop
 
         if loop is not None:
             try:
@@ -125,6 +125,28 @@ class BotRunner:
 
         else:
             print("Loop отсутствует.")
+
+
+    def send_message(self, chat_id: str, message: str):
+
+        if self.status != BotStatus.RUNNING:
+            raise RuntimeError("Бот не запущен")
+        
+        with self._lock:
+            bot = self._bot_session
+
+        loop = bot.loop
+
+        return asyncio.run_coroutine_threadsafe(
+            bot.send_message(chat_id, message),
+            loop,
+        )
+
+        
+
+        
+
+            
 
 
 

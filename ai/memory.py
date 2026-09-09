@@ -51,6 +51,19 @@ def save_message(chat_id: int,
 
 
 
+def clear_history(chat_id: int) -> int:
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "DELETE FROM chat_history WHERE chat_id = ?",
+            (chat_id,)
+        )
+        deleted_count = cur.rowcount
+
+    return deleted_count
+
+
+
 def get_history(
     chat_id,
     limit: int = 12,
