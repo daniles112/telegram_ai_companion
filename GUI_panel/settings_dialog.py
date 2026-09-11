@@ -9,6 +9,8 @@ from GUI_panel.gui_hepler.GUI_styles_helper import *
 from GUI_panel.telegram_settings_page import TelegramSettingsPage
 from GUI_panel.providers_page import AIProvidersPage
 from GUI_panel.system_prompt_page import SystemPromptPage
+from PySide6.QtGui import QIcon
+
 
 
 class SettingsDialog(QDialog):
@@ -23,6 +25,7 @@ class SettingsDialog(QDialog):
         self.bot_runner = bot_runner
         self.model_registry = model_registry
         self.setWindowTitle("Настройки")
+        self.setWindowIcon(QIcon(str(BASE_DIR / "assets" / "settings.png")))
         self.resize(700, 450)
         self.settings_menu = create_listwidget()
         self.settings_menu.addItems(["Telegram", "LLM-Модели", "Провайдеры (API)", "Системный промпт"])
@@ -38,6 +41,7 @@ class SettingsDialog(QDialog):
         self.settings_pages.addWidget(self.ai_page)
         self.settings_pages.addWidget(self.providers_page)
         self.settings_pages.addWidget(self.system_prompt_page)
+        self.finished.connect(lambda _result: self.telegram_page.stop_check())
         self.settings_menu.currentRowChanged.connect(self.settings_pages.setCurrentIndex)
         self.settings_menu.setCurrentRow(0)
         self.save_button = create_button("Сохранить", style="secondary")

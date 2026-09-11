@@ -100,8 +100,8 @@ class OpenAIProvider(ABC):
                 }
 
 
-    def close_connection(self):
-        self.client.close()
+    async def close_connection(self):
+        await self.client.close()
 
 
     

@@ -4,13 +4,27 @@ GUI Styles Helper - Функции для быстрого применения 
 Используй эти функции при создании виджетов
 """
 
+
+
 from PySide6.QtWidgets import (
     QLabel, QLineEdit, QPushButton, 
-    QComboBox, QListWidget, QDialog, QTextEdit
+    QComboBox, QListWidget, QDialog, QTextEdit, QMessageBox
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPainter
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QIcon, QPainter
 from typing import Dict
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+
+
+SHOW_ICON = QIcon(str(BASE_DIR / "assets" / "show.svg"))
+HIDE_ICON = QIcon(str(BASE_DIR / "assets" / "hide.svg"))
+UPDATE_ICON = QIcon(str(BASE_DIR / "assets" / "update.svg"))
+
 
 # ============================================================================
 # ЦВЕТОВАЯ СХЕМА (Material Design)
@@ -20,10 +34,12 @@ class Colors:
     """Централизованное управление цветами"""
     PRIMARY = "#1976d2"
     PRIMARY_DARK = "#1565c0"
+    PRIMARY_BLUE = "#93bbe9"
     PRIMARY_LIGHT = "#e3f2fd"
     
     ACCENT = "#ff6f00"
-    SUCCESS = "#2ecc71"
+    SUCCESS = "#30c06c"
+    SUCCESS_LIGHT = "#daf0e3"
     WARNING = "#f39c12"
     DANGER = "#e74c3c"
     DANGER_LIGHT = "#f8dcd9"
@@ -125,9 +141,9 @@ class Styles:
         QPushButton {{
             background-color: {Colors.PRIMARY};
             color: white;
-            border: none;
+            border: 2px solid {Colors.PRIMARY_BLUE};
             border-radius: 4px;
-            padding: 8px 16px;
+            padding: 6px 16px;
             font-weight: bold;
             font-size: 12px;
             min-width: 80px;
@@ -141,6 +157,7 @@ class Styles:
         QPushButton:disabled {{
             background-color: {Colors.BORDER};
             color: {Colors.TEXT_HINT};
+            border: 2px solid {Colors.BORDER};
         }}
     """
 
@@ -149,11 +166,10 @@ class Styles:
                 background-color: {Colors.PRIMARY};
                 color: white;
                 border: none;
-                border-radius: 2px;
-                padding: 8px 16px;
+                border-radius: 8px;
+                padding: 6px 16px;
                 font-weight: bold;
-                font-size: 14px;
-                max-width: 30px;
+                font-size: 12px;
             }}
             QPushButton:hover {{
                 background-color: {Colors.PRIMARY_DARK};
@@ -195,10 +211,10 @@ class Styles:
                 background-color: white;
                 color: {Colors.PRIMARY};
                 border: 2px solid {Colors.PRIMARY};
-                border-radius: 4px;
+                border-radius: 8px;
                 padding: 6px 14px;
                 font-weight: bold;
-                font-size: 16px;
+                font-size: 24px;
                 max-width: 25px;
             }}
             QPushButton:hover {{
@@ -268,7 +284,7 @@ class Styles:
                 border-radius: 4px;
                 padding: 8px 16px;
                 font-weight: bold;
-                font-size: 14px;
+                font-size: 16px;
                 max-width: 30px;
             }}
             QPushButton:hover {{
@@ -306,7 +322,7 @@ class Styles:
                 border-radius: 4px;
                 padding: 8px 16px;
                 font-weight: bold;
-                font-size: 14px;
+                font-size: 16px;
                 max_width: 30px;
             }}
             QPushButton:hover {{
@@ -425,6 +441,131 @@ class StatusLight(QLabel):
             print(f"Доступные статусы: {list(self.status_colors.keys())}")
 
 
+
+class FunctionalPushButton(QPushButton):
+    def __init__(
+        self,
+        text: str,
+        loading_text: str = "Сохранение",
+        result_text: str = "Сохранено!",
+        result_duration: int = 2000,
+        parent=None,
+    ):
+        super().__init__(text, parent)
+
+        self.default_text = text
+        self.loading_text = loading_text
+        self.result_text = result_text
+        self.result_duration = result_duration
+
+        self._dots = 0
+
+        self._loading_timer = QTimer(self)
+        self._loading_timer.setInterval(350)
+        self._loading_timer.timeout.connect(self._update_loading)
+
+        self._result_timer = QTimer(self)
+        self._result_timer.setSingleShot(True)
+        self._result_timer.timeout.connect(self._show_result)
+
+        self._result_highlighted = False
+        self._style_before_result = ""
+
+
+    def start_loading(self):
+        if self._loading_timer.isActive():
+            return
+
+        self.setEnabled(False)
+
+        self._dots = 0
+        self._update_loading()
+
+        self._loading_timer.start()
+
+
+    def _update_loading(self):
+        self._dots = (self._dots % 3) + 1
+
+        dots = "." * self._dots
+        self.setText(f"{self.loading_text}{dots}")
+
+
+    def show_result(self, text: str | None = None):
+        self._loading_timer.stop()
+
+        if not self._result_highlighted:
+            self._style_before_result = self.styleSheet()
+            self._result_highlighted = True
+            self.setStyleSheet(
+                f"{self._style_before_result}\n"
+                "QPushButton, QPushButton:disabled {"
+                f"background-color: {Colors.SUCCESS_LIGHT};"
+                f"color: {Colors.SUCCESS};"
+                f"border: 2px solid {Colors.SUCCESS};"
+                "}"
+            )
+
+        self.setText(text or self.result_text)
+
+        self._result_timer.start(self.result_duration)
+
+
+    def _show_result(self):
+        self.setText(self.default_text)
+        self.setEnabled(True)
+        self._restore_default_style()
+
+
+    def _restore_default_style(self):
+        if self._result_highlighted:
+            self.setStyleSheet(self._style_before_result)
+            self._style_before_result = ""
+            self._result_highlighted = False
+
+
+    def reset(self):
+        self._loading_timer.stop()
+        self._result_timer.stop()
+
+        self.setText(self.default_text)
+        self.setEnabled(True)
+        self._restore_default_style()
+             
+
+
+class AppMessageBox(QMessageBox):
+    _icon_paths = {
+        "warning": BASE_DIR / "assets" / "warning.png",
+        "error": BASE_DIR / "assets" / "error.png",
+    }
+
+    def __init__(self, message_type: str = "warning", parent=None):
+        super().__init__(parent)
+        icon_path = self._icon_paths.get(message_type)
+        if icon_path is not None:
+            self.setWindowIcon(QIcon(str(icon_path)))
+
+        if message_type == "warning":
+            self.setIcon(QMessageBox.Icon.Warning)
+        elif message_type == "error":
+            self.setIcon(QMessageBox.Icon.Critical)
+
+    @classmethod
+    def show_warning(cls, parent, title: str, text: str):
+        message_box = cls("warning", parent)
+        message_box.setWindowTitle(title)
+        message_box.setText(text)
+        return message_box.exec()
+
+    @classmethod
+    def show_error(cls, parent, title: str, text: str):
+        message_box = cls("error", parent)
+        message_box.setWindowTitle(title)
+        message_box.setText(text)
+        return message_box.exec()
+
+
 # ============================================================================
 # ФУНКЦИИ-ПОМОЩНИКИ
 # ============================================================================
@@ -511,6 +652,22 @@ def create_button(text: str, style: str = "primary", parent=None) -> QPushButton
     elif style == "success":
         button.setStyleSheet(Styles.BUTTON_SUCCESS)
     
+    return button
+
+
+def create_dynamic_button(text: str, 
+                          loading_text: str,
+                          result_text: str,
+                          style: str = "secondary", 
+                          parent=None):
+    
+    button = FunctionalPushButton(text, loading_text, result_text, parent=parent)
+
+    if style == "secondary":
+        button.setStyleSheet(Styles.BUTTON_SECONDARY)
+    elif style == "primary":
+        button.setStyleSheet(Styles.BUTTON_PRIMARY)
+
     return button
 
 

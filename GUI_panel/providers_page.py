@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QVBoxLayout, QWidget
 from GUI_panel.gui_hepler.GUI_styles_helper import *
 from ai.config.settings_manager import SettingsManager
 
+from PySide6.QtCore import QSize
 
 
 class AIProvidersPage(QWidget):
@@ -70,7 +71,10 @@ class AIProvidersPage(QWidget):
             QLineEdit.EchoMode.Password
         )
 
-        self.show_key_button = create_small_button("*", style="secondary")
+        self.show_key_button = create_small_button("", style="primary")
+
+        self.show_key_button.setIcon(SHOW_ICON)
+        self.show_key_button.setIconSize(QSize(18, 18))
 
         self.show_key_button.clicked.connect(
             self.toggle_key_visibility
@@ -161,14 +165,11 @@ class AIProvidersPage(QWidget):
 
 
     def toggle_key_visibility(self) -> None:
-        if (
-            self.api_key_input.echoMode()
-            == QLineEdit.EchoMode.Password
-        ):
-            self.api_key_input.setEchoMode(
-                QLineEdit.EchoMode.Normal
-            )
+
+        if self.api_key_input.echoMode() == QLineEdit.EchoMode.Password:
+            self.api_key_input.setEchoMode(QLineEdit.EchoMode.Normal)
+            self.show_key_button.setIcon(HIDE_ICON)
+
         else:
-            self.api_key_input.setEchoMode(
-                QLineEdit.EchoMode.Password
-            )
+            self.api_key_input.setEchoMode(QLineEdit.EchoMode.Password)
+            self.show_key_button.setIcon(SHOW_ICON)

@@ -34,6 +34,9 @@ class TelegramBot:
         self.provider_manager = ProviderManager(self.settings)
         self.image_generator = CivitaiClient()
         self._loop = None
+        self._stop_lock = asyncio.Lock()
+        self._stopped = False
+        self._polling_started = False
 
         self._register_handlers()
 
@@ -146,32 +149,45 @@ class TelegramBot:
 
     async def run(self, model_info: ModelConfig, on_ready) -> None:
         self._loop = asyncio.get_running_loop()
-
-        self.provider_manager.select(model_info)
-
-        print("Прогрев модели...")
-
-        ping_answer = await self.provider_manager.ping()
         
-        if not ping_answer["result"]:
-            raise Exception(ping_answer["errors"])
-        
-        print("Модель готова.")
+        try:
+            self.provider_manager.select(model_info)
 
-        on_ready()
+            print("Прогрев модели...")
 
-        await self.dp.start_polling(self.bot)
+            ping_answer = await self.provider_manager.ping()
+            
+            if not ping_answer["result"]:
+                raise Exception(ping_answer["errors"])
+            
+            print("Модель готова.")
+
+            on_ready()
+
+            self._polling_started = True
+            await self.dp.start_polling(self.bot)
+            self._polling_started = False
+
+        finally:
+            await self.stop()
 
 
     async def stop(self) -> None:
         if self._loop is None:
             return
 
-        await self.dp.stop_polling()
-        await self.image_generator.close()
-        await self.provider_manager.close()
+        async with self._stop_lock:
+            if self._stopped:
+                return
 
-        print("Бот остановлен.")
+            self._stopped = True
+            if self._polling_started:
+                await self.dp.stop_polling()
+            await self.image_generator.close()
+            await self.provider_manager.close()
+            await self.bot.session.close()
+
+            print("Бот остановлен.")
 
 
     async def send_message(self, chat_id: int, message: str):

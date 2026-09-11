@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QCheckBox, QDialog, QFormLayout, QHBoxLayout, QMessageBox, QVBoxLayout
+from PySide6.QtWidgets import QCheckBox, QDialog, QFormLayout, QHBoxLayout, QVBoxLayout
 
 from GUI_panel.gui_hepler.GUI_styles_helper import *
 
@@ -35,9 +35,9 @@ class AddModelDialog(QDialog):
 
     def validate_and_accept(self):
         if not self.name_input.text().strip():
-            QMessageBox.warning(self, "Ошибка", "Введите название модели.")
+            AppMessageBox.show_warning(self, "Ошибка", "Введите название модели.")
             return
         if not self.model_id_input.text().strip():
-            QMessageBox.warning(self, "Ошибка", "Введите Model ID.")
+            AppMessageBox.show_warning(self, "Ошибка", "Введите Model ID.")
             return
         self.accept()

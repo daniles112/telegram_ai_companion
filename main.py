@@ -2,7 +2,6 @@
 from PySide6.QtWidgets import QApplication
 from GUI_panel.gui import MainWindow
 from telegram_bot.bot_runner import BotRunner
-from dotenv import load_dotenv
 from data.db_connect import init_db
 from ai.config.settings_manager import SettingsManager
 from ai.config.models import ModelRegistry
@@ -13,8 +12,6 @@ import sys
 
 
 init_db()
-
-load_dotenv()
 
 def main() -> None:
 

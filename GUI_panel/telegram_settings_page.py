@@ -6,12 +6,15 @@ from telegram_bot.bot_runner import BotRunner, BotStatus
 from telegram_bot.telegram_check_worker import TelegramCheckWorker
 from GUI_panel.gui_hepler.GUI_styles_helper import *
 
+from PySide6.QtCore import QSize
+
 
 class TelegramSettingsPage(QWidget):
     def __init__(self, settings: SettingsManager, bot_runner: BotRunner) -> None:
         super().__init__()
         self.settings = settings
         self.bot_runner = bot_runner
+        self.thread: QThread | None = None
         title = create_title("Telegram")
         description = create_subtitle("Настройка подключения Telegram-бота")
         name_label = create_subtitle("Имя-триггер Telegram-бота")
@@ -20,7 +23,11 @@ class TelegramSettingsPage(QWidget):
         self.token_input = create_input()
         self.token_input.setPlaceholderText("Введите токен Telegram-бота")
         self.token_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self.show_token_button = create_small_button("*", style="secondary")
+        self.show_token_button = create_small_button("", style="primary")
+
+        self.show_token_button.setIcon(SHOW_ICON)
+        self.show_token_button.setIconSize(QSize(18, 18))
+
         self.show_token_button.clicked.connect(self.toggle_token_visibility)
         token_layout = QHBoxLayout()
         token_layout.addWidget(self.token_input)
@@ -57,8 +64,10 @@ class TelegramSettingsPage(QWidget):
     def toggle_token_visibility(self) -> None:
         if self.token_input.echoMode() == QLineEdit.EchoMode.Password:
             self.token_input.setEchoMode(QLineEdit.EchoMode.Normal)
+            self.show_token_button.setIcon(HIDE_ICON)
         else:
             self.token_input.setEchoMode(QLineEdit.EchoMode.Password)
+            self.show_token_button.setIcon(SHOW_ICON)
 
     def check_connection(self) -> None:
         token = self.token_input.text().strip()
@@ -78,8 +87,24 @@ class TelegramSettingsPage(QWidget):
         self.worker.finished.connect(self.thread.quit)
         self.worker.error.connect(self.thread.quit)
         self.thread.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self._clear_thread)
         self.thread.finished.connect(self.thread.deleteLater)
         self.thread.start()
+
+    def stop_check(self) -> None:
+        thread = getattr(self, "thread", None)
+        if thread is None:
+            return
+
+        try:
+            if thread.isRunning():
+                thread.quit()
+                thread.wait()
+        except RuntimeError:
+            self.thread = None
+
+    def _clear_thread(self) -> None:
+        self.thread = None
 
     def load_settings(self) -> None:
         self.token_input.setText(self.settings.get("telegram.token", ""))

@@ -29,5 +29,6 @@ class ProviderManager:
         return self._provider.ping()
 
 
-    def close(self):
-        self._provider.close_connection()
+    async def close(self):
+        if self._provider is not None:
+            await self._provider.close_connection()

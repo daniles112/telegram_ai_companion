@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QHBoxLayout, QMessageBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout, QWidget
 
 from ai.config.models import ModelRegistry
 from GUI_panel.add_model_dialog import AddModelDialog
@@ -100,7 +100,7 @@ class AISettingsPage(QWidget):
             self.model_registry.add_custom_model(name=model_data["name"], model_id=model_data["model_id"], provider=model_data["provider"].lower(), free=model_data["is_free"])
             self.load_models()
         except ValueError:
-            QMessageBox.warning(self, "Ошибка", f"Модель с названием '{model_data['name']}' уже существует.")
+            AppMessageBox.show_warning(self, "Ошибка", f"Модель с названием '{model_data['name']}' уже существует.")
 
     def remove_model(self) -> None:
         index = self.models_list.currentIndex()
@@ -109,7 +109,8 @@ class AISettingsPage(QWidget):
         model = self.model_registry.get_models()[index]
         if model.builtin:
             return
-        msg_box = QMessageBox(self)
+        msg_box = AppMessageBox(parent=self)
+        msg_box.setIcon(QMessageBox.Icon.Question)
         msg_box.setWindowTitle("Удаление модели")
         msg_box.setText(f'Вы действительно хотите удалить модель "{model.name}"?')
         yes_button = msg_box.addButton("Да", QMessageBox.ButtonRole.YesRole)

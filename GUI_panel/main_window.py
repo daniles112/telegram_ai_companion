@@ -1,5 +1,5 @@
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QHBoxLayout, QMessageBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
 from ai.config.models import ModelRegistry
 from ai.config.settings_manager import SettingsManager
@@ -8,9 +8,11 @@ from telegram_bot.bot_runner import BotRunner, BotStatus
 from GUI_panel.gui_hepler.GUI_styles_helper import *
 from GUI_panel.settings_dialog import SettingsDialog
 from GUI_panel.chats_dialog import ChatsDialog
+from PySide6.QtGui import QIcon
 
 
 class MainWindow(QWidget):
+
     def __init__(self, bot_runner: BotRunner, settings: SettingsManager, model_registry: ModelRegistry) -> None:
         super().__init__()
         self.resize(420, 260)
@@ -19,7 +21,8 @@ class MainWindow(QWidget):
         self.settings = settings
         self.model_registry = model_registry
         self.model_registry.models_changed.connect(self.update_model_list)
-        self.setWindowTitle("AI Bot Manager")
+        self.setWindowTitle("Telegram AI-Bot Manager")
+        self.setWindowIcon(QIcon(str(BASE_DIR / "assets" / "tg.png")))
         self.animation_timer = QTimer(self)
         self.animation_timer.timeout.connect(self.animate_status)
         self.animation_dots = 0
@@ -59,7 +62,7 @@ class MainWindow(QWidget):
 
     def update_model_list(self) -> None:
         self.model_box.clear()
-        models = self.model_registry.get_models()
+        models = self.model_registry.get_available_models()
         for model in models:
             self.model_box.addItem(model.name)
 
@@ -92,7 +95,7 @@ class MainWindow(QWidget):
         try:
             self.bot_runner.start(model_info, self.settings)
         except RuntimeError as error:
-            QMessageBox.warning(self, "Ошибка запуска", error)
+            AppMessageBox.show_warning(self, "Ошибка запуска", str(error))
             print(f"Ошибка запуска: {error!r}")
             self.set_status("stopped")
             return
@@ -131,11 +134,10 @@ class MainWindow(QWidget):
             self.model_box.setEnabled(True)
 
         if self.bot_runner.error is not None:
-            QMessageBox.critical(
+            AppMessageBox.show_error(
                 self,
                 "Ошибка запуска",
-                f"Не удалось запустить бота:\n\n"
-                f"{self.bot_runner.error}"
+                f"Не удалось запустить бота:\n\n{self.bot_runner.error}"
             )
             return
         
@@ -169,13 +171,18 @@ class MainWindow(QWidget):
 
     def open_settings(self) -> None:
         dialog = SettingsDialog(self.settings, self.bot_runner, self.model_registry, self)
-        if dialog.exec():
+
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+
             if self.bot_runner.status == BotStatus.RUNNING:
                 selected_model = self.model_box.currentText()
                 model_info = self.model_registry.get_model_by_name(selected_model)
                 self.set_status("starting")
                 QTimer.singleShot(200, self.check_bot_started)
                 self.bot_runner.restart(model_info, self.settings)
+
+            self.update_model_list()
+            
 
 
     def open_chats(self) -> None:

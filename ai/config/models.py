@@ -29,6 +29,17 @@ class ModelRegistry(QObject):
         return self.models.copy()
 
 
+    def get_available_models(self):
+        providers = self.settings.get("ai.providers")
+        connected_providers = [provider for provider
+                                in providers
+                                if providers[provider].get("api_key", "")]
+
+        return [model for model
+                in self.models 
+                if model.provider in connected_providers]
+
+
     def get_model_by_name(self, name) -> ModelConfig:
         for model in self.models:
             if name == model.name:
