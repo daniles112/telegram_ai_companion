@@ -1,0 +1,5 @@
+PySide6
+aiogram
+openai
+python-dotenv
+httpx

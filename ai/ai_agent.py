@@ -51,7 +51,11 @@ async def take_message(provider_manager: object,
             "content": user_message
         })
 
-        system_prompt = get_system_prompt(chat_id)
+        chat_prompt = get_system_prompt(chat_id)
+
+        default_prompt = settings.get("telegram.default_prompt", "")
+
+        system_prompt = chat_prompt if chat_prompt else default_prompt
 
         system_prompt = f"Твое имя {bot_username}.\n{system_prompt}"
         

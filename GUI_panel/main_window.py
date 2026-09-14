@@ -9,6 +9,7 @@ from GUI_panel.gui_hepler.GUI_styles_helper import *
 from GUI_panel.settings_dialog import SettingsDialog
 from GUI_panel.chats_dialog import ChatsDialog
 from PySide6.QtGui import QIcon
+from GUI_panel.setup_window import SetupDialog
 
 
 class MainWindow(QWidget):
@@ -28,7 +29,6 @@ class MainWindow(QWidget):
         self.animation_dots = 0
         self.animation_text = ""
         self.model_box = create_combobox()
-        self.update_model_list()
         self.status_light = create_status_light()
         self.status_label = create_subtitle("")
         self.set_status("stopped")
@@ -59,10 +59,25 @@ class MainWindow(QWidget):
         self.settings_button.clicked.connect(self.open_settings)
         self.chats_button.clicked.connect(self.open_chats)
 
+        self.update_model_list()
+
+        if not self.settings.is_configured():
+            QTimer.singleShot(0, self.show_setup_dialog)
+
 
     def update_model_list(self) -> None:
         self.model_box.clear()
         models = self.model_registry.get_available_models()
+
+        if not models:
+            self.model_box.addItem("Доступных моделей нет")
+            self.model_box.setEnabled(False)
+            self.start_button.setEnabled(False)
+            return
+
+        self.model_box.setEnabled(True)
+        self.start_button.setEnabled(True)
+
         for model in models:
             self.model_box.addItem(model.name)
 
@@ -184,6 +199,11 @@ class MainWindow(QWidget):
             self.update_model_list()
             
 
-
     def open_chats(self) -> None:
         self.chat_dialog.show()
+
+
+    def show_setup_dialog(self) -> None:
+        setup_dialog = SetupDialog(self)
+        if setup_dialog.exec() == QDialog.DialogCode.Accepted:
+            self.open_settings()

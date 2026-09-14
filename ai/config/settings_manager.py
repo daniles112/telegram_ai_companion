@@ -76,6 +76,7 @@ class SettingsManager:
 
         return current
 
+
     def set(self, key: str, value: Any) -> None:
         parts = key.split(".")
 
@@ -90,3 +91,13 @@ class SettingsManager:
         current[parts[-1]] = value
     
         self.save()
+
+
+    def is_configured(self) -> bool:
+        telegram_token = self.get("telegram.token", "")
+        has_provider_key = any(
+            self.get(f"ai.providers.{provider}.api_key", "")
+            for provider in self.get("ai.providers", {})
+        )
+
+        return bool(telegram_token and has_provider_key)

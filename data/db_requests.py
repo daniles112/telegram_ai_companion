@@ -169,7 +169,7 @@ def get_system_prompt(chat_id: int):
         if row and row[0]:
             return row[0]
         else:
-            return "Используется промпт по умолчанию."
+            return None
 
 
 
